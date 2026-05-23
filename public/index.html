@@ -106,7 +106,7 @@
   .status.err { color: #ff6b6b; }
 </style>
 </head>
-<body id="body">
+<body id="body" class="light">
 <div class="container">
   <p class="sub" id="sub">Loading...</p>
   <p class="song" id="song"></p>
@@ -120,7 +120,7 @@
 
 <script>
 let tracks = [];
-let isLight = false;
+let isLight = true;
 
 async function load() {
   try {
