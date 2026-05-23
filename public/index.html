@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 Choong Pick</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0e0e0e;
+    --text: #f0f0f0;
+    --muted: #666;
+    --sub: #555;
+    --btn-theme-border: #777;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  body.light {
+    --bg: #ffffff;
+    --text: #111111;
+    --muted: #999;
+    --sub: #aaa;
+    --btn-theme-border: #ccc;
+    background: #ffffff;
+    color: #111111;
+  }
+
+  .container { width: 100%; max-width: 480px; }
+
+  .sub {
+    font-size: 0.65rem;
+    color: var(--sub);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.8rem;
+  }
+
+  .song {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 0.4rem;
+    min-height: 2.6rem;
+  }
+
+  .artist {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 2rem;
+    min-height: 1.2rem;
+  }
+
+  .btns {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.93); }
+
+  .btn-pick {
+    background: #4f9eff;
+    border: none;
+  }
+
+  .btn-pick:disabled {
+    background: #2a2a2a;
+    cursor: not-allowed;
+  }
+
+  .btn-theme {
+    background: transparent;
+    border: 2px solid var(--btn-theme-border);
+    transition: border-color 0.3s;
+  }
+
+  .status {
+    font-size: 0.65rem;
+    color: var(--sub);
+    margin-top: 1rem;
+    min-height: 1rem;
+  }
+  .status.err { color: #ff6b6b; }
+</style>
+</head>
+<body id="body">
+<div class="container">
+  <p class="sub" id="sub">Loading...</p>
+  <p class="song" id="song"></p>
+  <p class="artist" id="artist"></p>
+  <div class="btns">
+    <button class="btn btn-pick" id="pickBtn" onclick="pick()" disabled aria-label="랜덤 뽑기">🎲</button>
+    <button class="btn btn-theme" id="themeBtn" onclick="toggleTheme()" aria-label="테마 전환">☀️</button>
+  </div>
+  <p class="status" id="status"></p>
+</div>
+
+<script>
+let tracks = [];
+let isLight = false;
+
+async function load() {
+  try {
+    const res = await fetch('/api/tracks', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    tracks = data.tracks;
+    document.getElementById('sub').textContent = `${tracks.length} tracks loaded`;
+    document.getElementById('pickBtn').disabled = false;
+    pick();
+  } catch(e) {
+    document.getElementById('sub').textContent = 'Failed to load';
+    document.getElementById('status').textContent = '오류: ' + e.message;
+    document.getElementById('status').className = 'status err';
+  }
+}
+
+function pick() {
+  if (!tracks.length) return;
+  const t = tracks[Math.floor(Math.random() * tracks.length)];
+  document.getElementById('song').textContent = t.artist || '(아티스트 없음)';
+  document.getElementById('artist').textContent = t.title || '';
+}
+
+function toggleTheme() {
+  isLight = !isLight;
+  document.getElementById('body').classList.toggle('light', isLight);
+  document.getElementById('themeBtn').textContent = isLight ? '🌙' : '☀️';
+}
+
+load();
+</script>
+</body>
+</html>
