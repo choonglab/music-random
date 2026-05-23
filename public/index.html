@@ -86,9 +86,7 @@
 
   .btn:active { transform: scale(0.93); }
 
-  .btn-pick {
-    background: #4f9eff;
-    border: none;
+  .btn-pick { background: transparent; border: 2px solid var(--btn-border); }
   }
 
   .btn-pick:disabled {
@@ -96,10 +94,7 @@
     cursor: not-allowed;
   }
 
-  .btn-theme {
-    background: transparent;
-    border: 2px solid var(--btn-theme-border);
-    transition: border-color 0.3s;
+  .btn-theme { background: transparent; border: 2px solid var(--btn-border); transition: border-color 0.3s; }
   }
 
   .status {
