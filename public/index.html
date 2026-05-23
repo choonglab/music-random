@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 Choong Pick</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #4f9eff;
+    --text: #f0f0f0;
+    --muted: #555;
+    --muted2: #888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', 'Noto Sans KR', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .container { width: 100%; max-width: 480px; }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.8rem;
+    font-weight: 400;
+    margin-bottom: 0.4rem;
+  }
+  h1 span { color: var(--accent); font-style: italic; }
+
+  .sub {
+    font-size: 0.7rem;
+    color: var(--muted2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 2.5rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.75rem;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--accent);
+    transition: height 0.4s ease;
+  }
+
+  .card.active::before { height: 100%; }
+
+  .placeholder {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .result { display: none; }
+  .result.show {
+    display: block;
+    animation: up 0.35s ease;
+  }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .r-folder {
+    font-size: 0.6rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.6rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .r-artist {
+    font-family: 'DM Serif Display', 'Noto Sans KR', serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 0.35rem;
+  }
+
+  .r-title {
+    font-size: 0.8rem;
+    color: var(--muted2);
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .r-flag {
+    position: absolute;
+    top: 1rem; right: 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0e0e0e;
+    border: none;
+    font-family: 'DM Mono', 'Noto Sans KR', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn:hover { background: #74b5ff; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+
+  .status {
+    font-size: 0.65rem;
+    color: var(--muted2);
+    text-align: center;
+    margin-top: 0.8rem;
+    min-height: 1rem;
+    letter-spacing: 0.04em;
+  }
+  .status.err { color: #ff6b6b; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Choong <span>Pick</span></h1>
+  <p class="sub" id="sub">Loading tracks...</p>
+
+  <div class="card" id="card">
+    <p class="placeholder" id="placeholder">Loading...</p>
+    <div class="result" id="result">
+      <div class="r-folder" id="rFolder"></div>
+      <div class="r-artist" id="rArtist"></div>
+      <div class="r-title" id="rTitle"></div>
+      <div class="r-flag" id="rFlag"></div>
+    </div>
+  </div>
+
+  <button class="btn" id="btn" onclick="pick()" disabled>🎲 랜덤 뽑기</button>
+  <p class="status" id="status"></p>
+</div>
+
+<script>
+let tracks = [];
+
+async function load() {
+  try {
+    const res = await fetch('/api/tracks', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    tracks = data.tracks;
+    document.getElementById('sub').textContent = `${tracks.length} tracks loaded`;
+    document.getElementById('placeholder').textContent = '버튼을 눌러 랜덤 음악을 뽑아보세요';
+    document.getElementById('btn').disabled = false;
+    document.getElementById('status').textContent = '';
+  } catch(e) {
+    document.getElementById('sub').textContent = 'Failed to load';
+    document.getElementById('status').textContent = '오류: ' + e.message;
+    document.getElementById('status').className = 'status err';
+  }
+}
+
+function pick() {
+  if (!tracks.length) return;
+  const t = tracks[Math.floor(Math.random() * tracks.length)];
+  document.getElementById('rFolder').textContent = t.folder || 'No folder';
+  document.getElementById('rArtist').textContent = t.artist || '(아티스트 없음)';
+  document.getElementById('rTitle').textContent = t.title || '';
+  document.getElementById('rFlag').textContent = t.flag ? '🚩' : '';
+
+  document.getElementById('placeholder').style.display = 'none';
+  const r = document.getElementById('result');
+  r.classList.remove('show');
+  void r.offsetWidth;
+  r.classList.add('show');
+  document.getElementById('card').classList.add('active');
+}
+
+load();
+</script>
+</body>
+</html>
